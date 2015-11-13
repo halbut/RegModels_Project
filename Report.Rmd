@@ -1,0 +1,116 @@
+---
+output: html_document
+---
+Analysis of MPG vs Transmission type
+====================================
+
+Alper Halbutogullari, November 10, 2015
+
+## Executive summary
+
+We are trying to answer the following questions:
+
+*“Is an automatic or manual transmission better for MPG”*   
+*"Quantify the MPG difference between automatic and manual transmissions"*  
+
+Based on the given (mtcars) data set, all else being equal,
+cars with manual transmissions are more efficient than the ones with
+automatic transmissions. The difference is, on average, 7.24 mpg.
+This value has a 95% confidence interval of [3.21 , 11.28],
+in other words we are 95% confident that the savings is 7.24 $\pm$ 4.03 mpg.
+
+## Analysis
+
+### Summary of the data
+
+The data was extracted from the 1974 Motor Trend US magazine, and
+comprises fuel consumption and other aspects of automobile design and
+performance for 32 automobiles (1973–74 models). We will only be using
+the mpg & am (transmission type, 0 = Automatic, 1 = Manual) features.
+
+```{r echo=FALSE, warning=FALSE, fig.width=8, fig.height=6}
+data(mtcars)
+```
+
+### Initial Exploration
+
+If we visualize how mpg changes with transmission type (see Figure 1 in Appendix), then we see that there is clearly a difference (~7 mpg). However we need to check the significance of this hypothesis.
+
+Although transmission type is a categorical variable, because it has
+only two values, we can treat it as numerical. So let's check the
+correlation between mpg and the transmission type:
+
+```{r echo=TRUE, eval=TRUE, fig.width=10, fig.height=3}
+cor.test(mtcars$mpg, mtcars$am)
+```
+
+Based on the p value (0.000285) from the above result, 
+we can confidently say that there is a direct correlation.
+
+So, let's try linear regression to model the relation
+between MPG and the transmission type:
+
+```{r echo=TRUE, eval=TRUE, fig.width=10, fig.height=3}
+fit <- lm(mpg ~ am, data = mtcars) 
+summary(fit)
+```
+
+This model tells us that we can formulate the mpg-am relation 
+by the following formula (see Figure 2 for more details) :
+
+    mpg = 17.147 + 7.245 * am
+
+7.245, the coefficient of am in the above formula, is the mpg
+difference between cars with automatic and manual transmissions
+(with automatic transmissions consuming more gallons of gas per mile).
+
+Let's also check the significance of this with a t-test:
+
+```{r echo=TRUE, eval=TRUE, fig.width=10, fig.height=3}
+t.test(mpg ~ am, data=mtcars)
+```
+
+From the result of the above t-test, we see that mpg values of the cars
+with manual and automatic transmission are 17.14737 and 24.39231,
+respectively, hence the difference is: 7.24494. 
+From the p-value (0.001374 << 0.05), we can confidently say that this
+difference is significant, i.e. not happening by chance. Also from the
+95% confidence interval, we can say that this difference varies
+between 3.209684 and 11.280194. Note that the result of this test 
+agrees exactly with the result of the regression model.
+
+## Conclusion.
+
+As seen from both of the results above, cars with manual
+transmission provide a savings of, on average, 7.24494 mpg 
+over cars with automatic transmission, with a 95% confidence 
+interval of [3.21 , 11.28].
+
+
+## Appendix
+
+
+```{r warning=FALSE, echo=FALSE, eval=TRUE, fig.width=10, fig.height=10}
+library(ggplot2)
+
+mtcars$am<-factor(mtcars$am, levels=c(0,1), labels=c("Automatic", "Manual"))
+
+ggplot(mtcars, aes(y=mpg, x=factor(am))) +
+       geom_boxplot(aes(fill = factor(am))) +
+       xlab("Transmission type") +
+       ylab("Miles per gallon") +
+       labs(title=expression("MPG vs. transmission type"))
+```
+
+
+Figure 1: How mpg changes with transmission type
+
+
+
+```{r warning=FALSE, echo=FALSE, eval=TRUE, fig.height=8}
+par(mfrow=c(2,2))
+plot(fit)
+```
+
+
+Figure 2: Details of model "fit"
